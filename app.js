@@ -6,9 +6,6 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var fs = require('fs');
 var request = require('request');
-var cheerio = require('cheerio');
-var tsv = require('node-tsv-json');
-
 
 var index = require('./routes/index');
 // var trigger = require('./routes/trigger');
@@ -30,6 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.use('/', index);
+<<<<<<< HEAD
 // app.use('/trigger', trigger);
 // app.use('/users', users);
 
@@ -50,6 +48,8 @@ app.use('/', index);
 //     });
 //   });
 // });
+=======
+>>>>>>> f51020e3760295e6826c2658e748f8fa9f70aca6
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -82,6 +82,7 @@ app.use(function(err, req, res, next) {
   });
 });
 
+<<<<<<< HEAD
 
 // setTimeout(getPointAndRecord, 1);
 
@@ -114,4 +115,6 @@ app.use(function(err, req, res, next) {
 
 
 
+=======
+>>>>>>> f51020e3760295e6826c2658e748f8fa9f70aca6
 module.exports = app;
