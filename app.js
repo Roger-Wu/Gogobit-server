@@ -9,8 +9,6 @@ var request = require('request');
 var debug = require('debug')('monitor:server');
 var http = require('http');
 var index = require('./routes/index');
-// var trigger = require('./routes/trigger');
-// var users = require('./routes/users');
 
 var app = express();
 
@@ -25,7 +23,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
 
 app.use('/', index);
 
