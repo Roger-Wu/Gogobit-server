@@ -114,6 +114,8 @@
 					$form.appendChild($message);
 
 				$message._show = function(type, text) {
+					$message.classList.remove('success');
+					$message.classList.remove('failure');
 
 					$message.innerHTML = text;
 					$message.classList.add(type);
@@ -146,17 +148,33 @@
 					// Note: Doesn't actually do anything yet (other than report back with a "thank you"),
 					// but there's enough here to piece together a working AJAX submission call that does.
 						window.setTimeout(function() {
-
-							// Reset form.
-								$form.reset();
-
-							// Enable submit.
+							if($('#email').val() != "" && $('#address').val() != "") {
+								var object = {};
+								object.email = $('#email').val();
+								object.address = $('#address').val();
+								var jqxhr = $.post('/api/v1/subscrbe', object, function(data) {
+									$message._show('success', 'Subscribe success!');
+									$form.reset();
+									$submit.disabled = false;
+									console.log(data);
+								})
+									.fail(function(jqxhr, textStatus) {
+										if (jqxhr.status == 409) {
+											$message._show('failure', 'The email or address has exist!');
+											$submit.disabled = false;
+										}
+										else {
+											$message._show('failure', 'Something went wrong. Please try it later.');
+											$submit.disabled = false;
+										}
+										console.log(textStatus);
+										console.log(jqxhr);
+									});
+							}
+							else {
 								$submit.disabled = false;
-
-							// Show message.
-								$message._show('success', 'Thank you!');
-								//$message._show('failure', 'Something went wrong. Please try again.');
-
+								$message._show('failure', 'Please fill the blank field.');
+							}
 						}, 750);
 
 				});

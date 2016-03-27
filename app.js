@@ -9,6 +9,7 @@ var request = require('request');
 var debug = require('debug')('monitor:server');
 var http = require('http');
 var index = require('./routes/index');
+var api = require('./routes/api');
 
 var app = express();
 
@@ -25,6 +26,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
+app.use('/api/v1/', api);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -132,4 +134,5 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
+  console.log('Server is running on port: ' + addr.port);
 }
