@@ -152,7 +152,7 @@
 								var object = {};
 								object.email = $('#email').val();
 								object.address = $('#address').val();
-								var jqxhr = $.post('/api/v1/subscrbe', object, function(data) {
+								var jqxhr = $.post('/api/v0/subscrbe', object, function(data) {
 									$message._show('success', 'Subscribe success!');
 									$form.reset();
 									$submit.disabled = false;

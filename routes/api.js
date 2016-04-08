@@ -3,6 +3,7 @@ var router = express.Router();
 var request = require('request');
 var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
+var btcnews = require('btcnews');
 
 var url = 'mongodb://localhost:27017/gogobit';
 
@@ -78,5 +79,10 @@ router.post('/subscrbe', function (req, res, next) {
 	});
 });
 
+router.get('/app/posts', function (req, res, next) {
+	btcnews.getPosts(null, function(err, posts) {
+		res.json(posts);
+	});
+});
 
 module.exports = router;
