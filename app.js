@@ -10,6 +10,9 @@ var debug = require('debug')('monitor:server');
 var http = require('http');
 var index = require('./routes/index');
 var api = require('./routes/api');
+var btcnews = require('btcnews');
+var MongoClient = require('mongodb').MongoClient;
+var test = require('assert');
 
 var app = express();
 
@@ -75,6 +78,7 @@ var server = http.createServer(app);
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
+setTimeout(updatePostsToDatabase, 1);
 
 /**
  * Normalize a port into a number, string, or false.
@@ -135,4 +139,26 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
   console.log('Server is running on port: ' + addr.port);
+}
+
+function updatePostsToDatabase() {
+  console.log('Update posts!');
+  var sourceList = ['btclub', 'technews', 'bnext'];
+  for (var i = 0; i < sourceList.length; i++) {
+    btcnews.getPosts(sourceList[i], function(err, posts) {
+      MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
+        // Get a collection
+        var collection = db.collection('postsList');
+        for (var j = 0; j < posts.length; j++) {
+          var filter = {
+            title: posts[j].title
+          }
+          collection.updateMany(filter, {$set:posts[j]}, {upsert:true}, function(err, r) {
+            // db.close();
+          });
+        }
+      });
+    });
+  }
+  setTimeout(updatePostsToDatabase, 1000 * 60 * 60);
 }

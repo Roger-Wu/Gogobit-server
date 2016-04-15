@@ -80,8 +80,12 @@ router.post('/subscrbe', function (req, res, next) {
 });
 
 router.get('/app/posts', function (req, res, next) {
-	btcnews.getPosts(null, function(err, posts) {
-		res.json(posts);
+	MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
+		// Get a collection
+		var collection = db.collection('postsList');
+		collection.find().sort({timestamp: -1}).toArray(function(err, docs) {
+			res.json(docs);
+		});
 	});
 });
 
