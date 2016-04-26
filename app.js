@@ -143,7 +143,7 @@ function onListening() {
 
 function updatePostsToDatabase() {
   console.log('Update posts!');
-  var sourceList = ['btclub', 'technews', 'bnext'];
+  var sourceList = ['btclub', 'technews', 'bnext', '8btc'];
   for (var i = 0; i < sourceList.length; i++) {
     btcnews.getPosts(sourceList[i], function(err, posts) {
       MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
