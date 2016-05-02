@@ -7,6 +7,16 @@ var btcnews = require('btcnews');
 
 var url = 'mongodb://localhost:27017/gogobit';
 
+function getPostSourceFilter(queryCode) {
+	var filteredList = [];
+	for (var i = 0; i < queryCode.length; i++) {
+		if (queryCode[i] === '1') {
+			filteredList.push({source: btcnews.sourceList[i].source});
+		}
+	}
+	return filteredList;
+}
+
 router.get('/', function (req, res, next) {
 	res.render('index', {});
 });
@@ -87,6 +97,22 @@ router.get('/app/posts', function (req, res, next) {
 			res.json(docs);
 		});
 	});
+});
+
+router.get('/news/query', function (req, res, next) {
+	var queryCode = req.query['queryCode'];
+	var filteredList = getPostSourceFilter(queryCode);
+	MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
+		// Get a collection
+		var collection = db.collection('postsList');
+		collection.find({$or: filteredList}).sort({timestamp: -1}).toArray(function(err, docs) {
+			res.json(docs);
+		});
+	});
+});
+
+router.get('/news/sources', function (req, res, next) {
+	res.json(btcnews.sourceList);
 });
 
 module.exports = router;
