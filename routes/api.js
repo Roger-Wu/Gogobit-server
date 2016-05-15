@@ -89,39 +89,68 @@ router.post('/subscrbe', function (req, res, next) {
 });
 
 router.post('/alarm/set', function (req, res, next) {
-    var object = {};
-    object.deviceToken = req.body.deviceToken;
-    object.price = req.body.price;
-    object.orderType = req.body.orderType;
-    object.currencyType = req.body.currencyType;
-    object.state = req.body.state;
-    console.dir(object);
-    MongoClient.connect(url, function(err, db) {
-        assert.equal(null, err);
-        console.log("Connected correctly to server");
+    var alarm = {};
+    alarm.deviceToken = req.body.deviceToken;
+    alarm.sourceName = req.body.sourceName;
+    alarm.serialNumber = req.body.serialNumber;
+    alarm.price = req.body.price;
+    alarm.orderType = req.body.orderType;
+    alarm.currencyType = req.body.currencyType;
+    alarm.state = req.body.state;
+    alarm.description = req.body.description;
+    console.dir(alarm);
+
+    var filter = {
+        deviceToken: alarm.deviceToken,
+        serialNumber: alarm.serialNumber
+    }
+    MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
+        // Get a collection
         var collection = db.collection('alarmList');
-        var query = {};
-        query[''] = object.email;
-        console.log('query email is ' + query['email']);
-        collection.findOne(query, function(err, item) {
-        assert.equal(null, err);
-        console.log(item);
-        if (item) {
-            console.log('found!');
-            // db.close();
-            res.status(409).send({error:'object it\'s exist'});
-        }
-        else {
-            console.log('not found!');
-            collection.insert(object, function(err, item) {
-                assert.equal(null, err);
-                // db.close();
-                res.status(200).send('success!');
-            })
-        }
-      });
+
+        collection.updateMany(filter, {$set:alarm}, {upsert:true}, function(err, r) {
+        // db.close();
+        });
     });
-    res.json(object.deviceToken);
+    res.json(alarm.deviceToken);
+});
+
+router.post('/alarm/delete', function (req, res, next) {
+
+    var filter = {
+        deviceToken: req.body.deviceToken,
+        serialNumber: req.body.serialNumber
+    }
+    MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
+        // Get a collection
+        var collection = db.collection('alarmList');
+
+        collection.removeOne(filter, function(err, r) {
+            // db.close();
+            if (err) {
+                res.json({success: false, error: err, result: r});
+            }
+            else {
+                res.json({success: true, error: err, result: r});
+            }
+        });
+    });
+
+});
+
+router.get('/alarm/list', function (req, res, next) {
+    var filter = {
+        deviceToken: req.query['deviceToken']
+    }
+
+    MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
+    // Get a collection
+    var collection = db.collection('alarmList');
+    collection.find(filter).sort({serialNumber: 1}).toArray(function(err, docs) {
+            console.log(docs);
+            res.json(docs);
+        });
+    });
 });
 
 router.get('/app/posts', function (req, res, next) {

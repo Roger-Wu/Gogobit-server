@@ -13,6 +13,7 @@ var api = require('./routes/api');
 var btcnews = require('btcnews');
 var MongoClient = require('mongodb').MongoClient;
 var test = require('assert');
+var apnServer = require('./routes/apnServer');
 
 var app = express();
 
@@ -142,7 +143,7 @@ function onListening() {
 
 function updatePostsToDatabase() {
   console.log('Update posts!');
-  var sourceList = ['btclub', 'technews', 'bnext', '8btc', 'bitecoin'];
+  var sourceList = ['btclub', 'technews', 'bnext', '8btc', 'bitecoin', 'coindesk'];
   for (var i = 0; i < sourceList.length; i++) {
     btcnews.getPosts(sourceList[i], function(err, posts) {
       MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
