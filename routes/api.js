@@ -175,7 +175,14 @@ router.get('/news/query', function (req, res, next) {
         var collection = db.collection('postsList');
         collection.find({$or: filteredList}).sort({timestamp: -1}).toArray(function(err, docs) {
                 for (var i = 0; i < docs.length; i++) {
-                    docs[i]['title'] = chineseConv.tify(docs[i]['title']);
+                    if (docs[i].source != 'Coindesk') {
+                        docs[i]['title'] = chineseConv.tify(docs[i]['title']);
+                    }
+                    if (docs[i].title === null) {
+                        docs[i].title = '';
+                        docs[i].url = 'undefined';
+                        docs[i].imgUrl = 'undefined';
+                    }
                 }
                 console.log(docs);
                 res.json(docs);
