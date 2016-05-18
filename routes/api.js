@@ -97,7 +97,7 @@ router.post('/alarm/set', function (req, res, next) {
     alarm.priceType = req.body.priceType;
     alarm.currencyType = req.body.currencyType;
     alarm.state = req.body.state;
-    alarm.description = req.body.description;
+    alarm.desc = req.body.desc;
     console.dir(alarm);
 
     var filter = {
