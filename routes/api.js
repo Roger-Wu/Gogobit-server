@@ -94,7 +94,7 @@ router.post('/alarm/set', function (req, res, next) {
     alarm.sourceName = req.body.sourceName;
     alarm.serialNumber = req.body.serialNumber;
     alarm.price = req.body.price;
-    alarm.orderType = req.body.orderType;
+    alarm.priceType = req.body.priceType;
     alarm.currencyType = req.body.currencyType;
     alarm.state = req.body.state;
     alarm.description = req.body.description;
