@@ -3,8 +3,8 @@ var bitcoinex = require('bitcoinex');
 var MongoClient = require('mongodb').MongoClient;
 
 var options = {
-    cert: './routes/cert.pem',                 /* Certificate file path */
-    key:  './routes/key.pem',                  /* Key file path */
+    cert: './routes/pem/cert.pem',                 /* Certificate file path */
+    key:  './routes/pem/key.pem',                  /* Key file path */
     gateway: 'gateway.sandbox.push.apple.com',/* gateway address */
     port: 2195,                       /* gateway port */
     errorCallback: errorHappened ,    /* Callback when error occurs function(err,notification) */
