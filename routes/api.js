@@ -119,7 +119,7 @@ router.post('/alarm/delete', function (req, res, next) {
 
     var filter = {
         deviceToken: req.body.deviceToken,
-        serialNumber: req.body.serialNumber
+        serialNumber: parseInt(req.body.serialNumber)
     }
     MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
         // Get a collection
