@@ -107,7 +107,6 @@ router.post('/alarm/set', function (req, res, next) {
     MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
         // Get a collection
         var collection = db.collection('alarmList');
-
         collection.updateMany(filter, {$set:alarm}, {upsert:true}, function(err, r) {
         // db.close();
         });
