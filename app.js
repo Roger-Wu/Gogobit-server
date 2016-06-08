@@ -14,6 +14,7 @@ var btcnews = require('btcnews');
 var MongoClient = require('mongodb').MongoClient;
 var test = require('assert');
 var apnServer = require('./routes/apnServer');
+var https = require('https');
 
 var app = express();
 
@@ -71,6 +72,13 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
+const options = {
+  key: fs.readFileSync('/etc/nginx/ssl/nginx.key.pem'),
+  cert: fs.readFileSync('/etc/nginx/ssl/nginx.crt')
+};
+
+httpsServer = https.createServer(options, app);
+httpsServer.listen(3001);
 /**
  * Listen on provided port, on all network interfaces.
  */
