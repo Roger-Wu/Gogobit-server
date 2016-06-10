@@ -25,7 +25,7 @@ function checkBrokerPriceRepeatly() {
     var brokerList = ['maicoin', 'bitoex'];
     for (var i = 0; i < brokerList.length; i++) {
         bitcoinex.getBrokerPriceWith(brokerList[i], 'twd', function(err, brokerPriceObject) {
-            console.log(brokerPriceObject);
+            //console.log(brokerPriceObject);
             var filter = {
                 sourceName: brokerPriceObject.source
             }
@@ -45,7 +45,7 @@ function checkBrokerPriceRepeatly() {
                         }
                         else if (alarmList[j].state === 'persistent' && !isSend) {
                             var remain = alarmList[j].persistentRemain - 1;
-                            console.log('remain is: ' + remain);
+                            //console.log('remain is: ' + remain);
                             collection.updateOne(alarmList[j], {$set:{persistentRemain: remain}});
                         }
                     }
@@ -73,7 +73,7 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
                 if (parseFloat(brokerPriceObject.buyPrice) < parseFloat(alarm.price)) {
                     var alertMessage = '現在 ' + brokerPriceObject.source + ' 買價已低於 ' + alarm.price + ' 可以進場了！';
                     apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
-                    console.log('send!');
+                    //console.log('send!');
                     return true;
                 }
             }
@@ -82,7 +82,7 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
                 if (parseFloat(brokerPriceObject.sellPrice) > parseFloat(alarm.price)) {
                     var alertMessage = '現在 ' + brokerPriceObject.source + ' 賣價已超過 ' + alarm.price + ' 可以出場了！';
                     apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
-                    console.log('send!');
+                    //console.log('send!');
                     return true;
                 }
             }
@@ -97,7 +97,7 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
                 if (parseFloat(brokerPriceObject.buyPrice) < parseFloat(alarm.price)) {
                     var alertMessage = '現在 ' + brokerPriceObject.source + ' 買價已低於 ' + alarm.price + ' 可以進場了！';
                     apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
-                    console.log('send!');
+                    //console.log('send!');
                     return true;
                 }
             }
@@ -106,7 +106,7 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
                 if (parseFloat(brokerPriceObject.sellPrice) > parseFloat(alarm.price)) {
                     var alertMessage = '現在 ' + brokerPriceObject.source + ' 賣價已超過 ' + alarm.price + ' 可以出場了！';
                     apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
-                    console.log('send!');
+                    //console.log('send!');
                     return true;
                 }
             }

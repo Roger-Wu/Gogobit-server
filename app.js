@@ -9,6 +9,7 @@ var request = require('request');
 var debug = require('debug')('monitor:server');
 var http = require('http');
 var index = require('./routes/index');
+var webhook = require('./routes/webhook');
 var api = require('./routes/api');
 var btcnews = require('btcnews');
 var MongoClient = require('mongodb').MongoClient;
@@ -31,8 +32,53 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
+//app.use('/webhook', webhook);
 app.use('/api/v0/', api);
 
+app.get('/webhook/', function (req, res) {
+  if (req.query['hub.verify_token'] === 'andaler210') {
+    res.send(req.query['hub.challenge']);
+  }
+  res.send('Error, wrong validation token');
+});
+
+app.post('/webhook/', function (req, res) {
+  messaging_events = req.body.entry[0].messaging;
+  for (i = 0; i < messaging_events.length; i++) {
+    event = req.body.entry[0].messaging[i];
+    sender = event.sender.id;
+    if (event.message && event.message.text) {
+      text = event.message.text;
+      // Handle a text message from this sender
+	  console.log('Got message: ' + text);
+	  sendTextMessage(sender, "Got message, echo: " + text.substring(0, 200));
+    }
+  }
+  res.sendStatus(200);
+});
+
+var token = "EAAIGThfZBdbIBALoKwsdZARWmx6WtYZARnoRRjqvaGhC1smA6dsPGUmpZAlUWWn9agFfXbo17zw5fespZBSA7cLqxSnPY98m64qCCz2qCQEMZCvevt28CHSpM1L2m4PYOM85deLCmZBmvULfWUfG57mrafAcZB3BESmNNmu22o8hKAZDZD";
+
+function sendTextMessage(sender, text) {
+  messageData = {
+    text:text
+  }
+  request({
+    url: 'https://graph.facebook.com/v2.6/me/messages',
+    qs: {access_token:token},
+    method: 'POST',
+    json: {
+      recipient: {id:sender},
+      message: messageData,
+    }
+  }, function(error, response, body) {
+    if (error) {
+      console.log('Error sending message: ', error);
+    } else if (response.body.error) {
+      console.log('Error: ', response.body.error);
+    }
+  });
+}
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   res.status(404);
@@ -72,13 +118,17 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
-const options = {
-  key: fs.readFileSync('/etc/nginx/ssl/nginx.key.pem'),
-  cert: fs.readFileSync('/etc/nginx/ssl/nginx.crt')
+var options = {
+  key: fs.readFileSync('/etc/nginx/ssl/nginx.key'),
+  cert: fs.readFileSync('/etc/nginx/ssl/nginx.crt'),
+  requestCert: true,
+  rejectUnauthorized: false
+  //ca: [fs.readFileSync('/etc/nginx/ssl/ca.crt')]
 };
 
-httpsServer = https.createServer(options, app);
-httpsServer.listen(3001);
+secureServer = https.createServer(options, app);
+secureServer.listen(3001);
+secureServer.on('error', onError);
 /**
  * Listen on provided port, on all network interfaces.
  */

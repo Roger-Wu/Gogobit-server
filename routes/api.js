@@ -183,7 +183,7 @@ router.get('/news/query', function (req, res, next) {
                         docs[i].imgUrl = 'undefined';
                     }
                 }
-                console.log(docs);
+                // console.log(docs);
                 res.json(docs);
             });
         });
