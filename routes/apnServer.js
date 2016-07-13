@@ -44,9 +44,14 @@ function checkBrokerPriceRepeatly() {
                             collection.updateOne(alarmList[j], {$set:{persistentRemain: 60}});
                         }
                         else if (alarmList[j].state === 'persistent' && !isSend) {
-                            var remain = alarmList[j].persistentRemain - 1;
-                            //console.log('remain is: ' + remain);
-                            collection.updateOne(alarmList[j], {$set:{persistentRemain: remain}});
+                            if (alarmList[j].persistentRemain < 0) {
+                                collection.updateOne(alarmList[j], {$set:{persistentRemain: 60}});
+                            }
+                            else {
+                                var remain = alarmList[j].persistentRemain - 1;
+                                //console.log('remain is: ' + remain);
+                                collection.updateOne(alarmList[j], {$set:{persistentRemain: remain}});
+                            }
                         }
                     }
                     // res.json(alarmList);
@@ -67,22 +72,23 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
         return false;
     }
     else if (alarm.state === 'persistent') {
+		console.log('in persistent!');
         if (alarm.persistentRemain === undefined || alarm.persistentRemain < 1) {
             if (alarm.priceType === 'buy') {
-                // console.log('if!');
+                 console.log('if buy!');
                 if (parseFloat(brokerPriceObject.buyPrice) < parseFloat(alarm.price)) {
                     var alertMessage = '現在 ' + brokerPriceObject.source + ' 買價已低於 ' + alarm.price + ' 可以進場了！';
                     apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
-                    //console.log('send!');
+                    console.log('if buy send!');
                     return true;
                 }
             }
             if (alarm.priceType === 'sell') {
-                // console.log('if!');
+                 console.log('if sell!');
                 if (parseFloat(brokerPriceObject.sellPrice) > parseFloat(alarm.price)) {
                     var alertMessage = '現在 ' + brokerPriceObject.source + ' 賣價已超過 ' + alarm.price + ' 可以出場了！';
                     apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
-                    //console.log('send!');
+                    console.log('sell send!');
                     return true;
                 }
             }

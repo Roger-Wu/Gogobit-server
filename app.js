@@ -16,6 +16,7 @@ var MongoClient = require('mongodb').MongoClient;
 var test = require('assert');
 var apnServer = require('./routes/apnServer');
 var https = require('https');
+var Bot = require('./routes/bot');
 
 var app = express();
 
@@ -43,42 +44,24 @@ app.get('/webhook/', function (req, res) {
 });
 
 app.post('/webhook/', function (req, res) {
+
   messaging_events = req.body.entry[0].messaging;
+  console.dir(messaging_events);
   for (i = 0; i < messaging_events.length; i++) {
     event = req.body.entry[0].messaging[i];
     sender = event.sender.id;
     if (event.message && event.message.text) {
       text = event.message.text;
-      // Handle a text message from this sender
-	  console.log('Got message: ' + text);
-	  sendTextMessage(sender, "Got message, echo: " + text.substring(0, 200));
+      console.log('bot!');
+      Bot.message = text;
+      Bot.sender = sender;
+      console.log('user id is: ' + sender);
+      Bot.response();
     }
   }
   res.sendStatus(200);
 });
 
-var token = "EAAIGThfZBdbIBALoKwsdZARWmx6WtYZARnoRRjqvaGhC1smA6dsPGUmpZAlUWWn9agFfXbo17zw5fespZBSA7cLqxSnPY98m64qCCz2qCQEMZCvevt28CHSpM1L2m4PYOM85deLCmZBmvULfWUfG57mrafAcZB3BESmNNmu22o8hKAZDZD";
-
-function sendTextMessage(sender, text) {
-  messageData = {
-    text:text
-  }
-  request({
-    url: 'https://graph.facebook.com/v2.6/me/messages',
-    qs: {access_token:token},
-    method: 'POST',
-    json: {
-      recipient: {id:sender},
-      message: messageData,
-    }
-  }, function(error, response, body) {
-    if (error) {
-      console.log('Error sending message: ', error);
-    } else if (response.body.error) {
-      console.log('Error: ', response.body.error);
-    }
-  });
-}
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   res.status(404);
@@ -201,8 +184,9 @@ function onListening() {
 
 function updatePostsToDatabase() {
   console.log('Update posts!');
-  var sourceList = ['btclub', 'technews', 'bnext', '8btc', 'bitecoin', 'coindesk'];
+  var sourceList = ['btclub', 'technews', 'bnext', '8btc', 'bitecoin'];
   for (var i = 0; i < sourceList.length; i++) {
+    console.log('sourceList i is ' + i);
     btcnews.getPosts(sourceList[i], function(err, posts) {
       MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
         // Get a collection
@@ -210,6 +194,9 @@ function updatePostsToDatabase() {
         for (var j = 0; j < posts.length; j++) {
           var filter = {
             title: posts[j].title
+          }
+          if (posts[j].imgUrl == null) {
+            posts[j].imgUrl = 'http://gogobit.com/images/icon@512.png';
           }
           collection.updateMany(filter, {$set:posts[j]}, {upsert:true}, function(err, r) {
             // db.close();
