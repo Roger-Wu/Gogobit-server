@@ -17,6 +17,8 @@ var test = require('assert');
 var apnServer = require('./routes/apnServer');
 var https = require('https');
 var Bot = require('./routes/bot');
+var util = require('util');
+var Challenge = require('./routes/challenge');
 
 var app = express();
 
@@ -41,25 +43,6 @@ app.get('/webhook/', function (req, res) {
     res.send(req.query['hub.challenge']);
   }
   res.send('Error, wrong validation token');
-});
-
-app.post('/webhook/', function (req, res) {
-
-  messaging_events = req.body.entry[0].messaging;
-  console.dir(messaging_events);
-  for (i = 0; i < messaging_events.length; i++) {
-    event = req.body.entry[0].messaging[i];
-    sender = event.sender.id;
-    if (event.message && event.message.text) {
-      text = event.message.text;
-      console.log('bot!');
-      Bot.message = text;
-      Bot.sender = sender;
-      console.log('user id is: ' + sender);
-      Bot.response();
-    }
-  }
-  res.sendStatus(200);
 });
 
 // catch 404 and forward to error handler

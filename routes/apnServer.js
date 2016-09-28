@@ -44,7 +44,7 @@ function checkBrokerPriceRepeatly() {
                             collection.updateOne(alarmList[j], {$set:{persistentRemain: 60}});
                         }
                         else if (alarmList[j].state === 'persistent' && !isSend) {
-                            if (alarmList[j].persistentRemain < 0) {
+                            if (alarmList[j].persistentRemain < 0 || isNaN(alarmList[j].persistentRemain)) {
                                 collection.updateOne(alarmList[j], {$set:{persistentRemain: 60}});
                             }
                             else {
@@ -73,7 +73,7 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
     }
     else if (alarm.state === 'persistent') {
 		console.log('in persistent!');
-        if (alarm.persistentRemain === undefined || alarm.persistentRemain < 1) {
+        if (alarm.persistentRemain === undefined || alarm.persistentRemain < 1 || isNaN(alarm.persistentRemain)) {
             if (alarm.priceType === 'buy') {
                  console.log('if buy!');
                 if (parseFloat(brokerPriceObject.buyPrice) < parseFloat(alarm.price)) {
@@ -100,22 +100,22 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
     else if (alarm.state === 'onetime') {
         if (alarm.priceType === 'buy') {
                 // console.log('if!');
-                if (parseFloat(brokerPriceObject.buyPrice) < parseFloat(alarm.price)) {
-                    var alertMessage = '現在 ' + brokerPriceObject.source + ' 買價已低於 ' + alarm.price + ' 可以進場了！';
-                    apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
-                    //console.log('send!');
-                    return true;
-                }
+            if (parseFloat(brokerPriceObject.buyPrice) < parseFloat(alarm.price)) {
+                var alertMessage = '現在 ' + brokerPriceObject.source + ' 買價已低於 ' + alarm.price + ' 可以進場了！';
+                apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
+                //console.log('send!');
+                return true;
             }
-            if (alarm.priceType === 'sell') {
-                // console.log('if!');
-                if (parseFloat(brokerPriceObject.sellPrice) > parseFloat(alarm.price)) {
-                    var alertMessage = '現在 ' + brokerPriceObject.source + ' 賣價已超過 ' + alarm.price + ' 可以出場了！';
-                    apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
-                    //console.log('send!');
-                    return true;
-                }
+        }
+        if (alarm.priceType === 'sell') {
+            // console.log('if!');
+            if (parseFloat(brokerPriceObject.sellPrice) > parseFloat(alarm.price)) {
+                var alertMessage = '現在 ' + brokerPriceObject.source + ' 賣價已超過 ' + alarm.price + ' 可以出場了！';
+                apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
+                //console.log('send!');
+                return true;
             }
+        }
     }
     return false;
 }
