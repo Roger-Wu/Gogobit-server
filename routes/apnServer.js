@@ -1,4 +1,5 @@
-var apns = require('apn');
+'use strict';
+var apn = require('apn');
 var bitcoinex = require('bitcoinex');
 var MongoClient = require('mongodb').MongoClient;
 
@@ -10,12 +11,23 @@ var options = {
     errorCallback: errorHappened ,    /* Callback when error occurs function(err,notification) */
 };
 
+let provider = new apn.Provider({
+    // token: {
+    //     key: './routes/pem/production_key.pem',
+    //     keyId: "key-id",
+    //     teamId: 'com.company.gogobit',
+    // },
+    cert: './routes/pem/production_cert.pem',
+    key: './routes/pem/production_key.pem',
+    production: true,
+});
+
 var nameTable = {
     maicoin: 'Maicoin',
     bitoex: 'Bitoex'
 };
 
-var apnsConnection = new apns.Connection(options);
+// var apnConnection = new apn.Connection(options);
 
 function errorHappened(err, notification){
     console.log("err " + err);
@@ -65,7 +77,7 @@ function checkBrokerPriceRepeatly() {
 
 
 // var token = "329ccb543abdbcf15ac5af2aed43aba0f265b65314a20f1ead319fef795c0e36";
-// var myDevice = new apns.Device(token);
+// var myDevice = new apn.Device(token);
 
 function checkAlarmTrigger(alarm, brokerPriceObject) {
     if (alarm.state === 'off') {
@@ -78,7 +90,11 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
                  console.log('if buy!');
                 if (parseFloat(brokerPriceObject.buyPrice) < parseFloat(alarm.price)) {
                     var alertMessage = '現在 ' + brokerPriceObject.source + ' 買價已低於 ' + alarm.price + ' 可以進場了！';
-                    apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
+                    provider.send(getNotification(alertMessage), alarm.deviceToken).then( (response) => {
+                        console.log(response);
+                        console.log(response.failed[0].response);
+                    });
+                    // apnConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
                     console.log('if buy send!');
                     return true;
                 }
@@ -87,7 +103,11 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
                  console.log('if sell!');
                 if (parseFloat(brokerPriceObject.sellPrice) > parseFloat(alarm.price)) {
                     var alertMessage = '現在 ' + brokerPriceObject.source + ' 賣價已超過 ' + alarm.price + ' 可以出場了！';
-                    apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
+                    provider.send(getNotification(alertMessage), alarm.deviceToken).then( (response) => {
+                        console.log(response);
+                        console.log(response.failed[0].response);
+                    });
+                    // apnConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
                     console.log('sell send!');
                     return true;
                 }
@@ -102,7 +122,11 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
                 // console.log('if!');
             if (parseFloat(brokerPriceObject.buyPrice) < parseFloat(alarm.price)) {
                 var alertMessage = '現在 ' + brokerPriceObject.source + ' 買價已低於 ' + alarm.price + ' 可以進場了！';
-                apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
+                provider.send(getNotification(alertMessage), alarm.deviceToken).then( (response) => {
+                    console.log(response);
+                    console.log(response.failed[0].response);
+                });
+                // apnConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
                 //console.log('send!');
                 return true;
             }
@@ -111,7 +135,11 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
             // console.log('if!');
             if (parseFloat(brokerPriceObject.sellPrice) > parseFloat(alarm.price)) {
                 var alertMessage = '現在 ' + brokerPriceObject.source + ' 賣價已超過 ' + alarm.price + ' 可以出場了！';
-                apnsConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
+                provider.send(getNotification(alertMessage), alarm.deviceToken).then( (response) => {
+                    console.log(response);
+                    console.log(response.failed[0].response);
+                });
+                // apnConnection.sendNotification(getNote(alertMessage, alarm.deviceToken));
                 //console.log('send!');
                 return true;
             }
@@ -121,19 +149,32 @@ function checkAlarmTrigger(alarm, brokerPriceObject) {
 }
 
 function getNote(alert, token) {
-    var note = new apns.Notification();
+    var note = new apn.Notification();
     note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
     note.badge = 1;
     note.sound = "ping.aiff";
     note.alert = alert;
     note.payload = {'messageFrom': 'Caroline'};
-    note.device = new apns.Device(token);
+    note.device = new apn.Device(token);
+
+    return note;
+}
+
+function getNotification(alert) {
+    var note = new apn.Notification();
+    note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+    note.badge = 1;
+    note.sound = "ping.aiff";
+    note.alert = alert;
+    note.payload = {'messageFrom': 'Caroline'};
+    note.topic = "com.company.gogobit";
+    // note.device = new apn.Device(token);
 
     return note;
 }
 
 // "現在正是搬磚套利的好時機!";
 
-// apnsConnection.sendNotification(note);
+// apnConnection.sendNotification(note);
 // console.log('after send push notification!');
-checkBrokerPriceRepeatly();
+ checkBrokerPriceRepeatly();
