@@ -15,6 +15,7 @@ const webhook = require('./routes/webhook');
 const api = require('./routes/api');
 const btcnews = require('btcnews');
 const MongoClient = require('mongodb').MongoClient;
+const ggbMongo = require('./daemon/ggbMongo');
 const test = require('assert');
 const apnServer = require('./routes/apnServer');
 const https = require('https');
@@ -174,7 +175,7 @@ function updatePostsToDatabase() {
   for (let i = 0; i < sourceList.length; i++) {
     console.log(`sourceList i is ${i}`);
     btcnews.getPosts(sourceList[i], (err, posts) => {
-      MongoClient.connect('mongodb://localhost:27017/gogobit', (err, db) => {
+      ggbMongo.connect((connectError, db) => {
         // Get a collection
         const collection = db.collection('postsList');
         for (let j = 0; j < posts.length; j++) {
