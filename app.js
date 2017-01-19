@@ -1,33 +1,36 @@
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var fs = require('fs');
-var request = require('request');
-var debug = require('debug')('monitor:server');
-var http = require('http');
-var index = require('./routes/index');
-var webhook = require('./routes/webhook');
-var api = require('./routes/api');
-var btcnews = require('btcnews');
-var MongoClient = require('mongodb').MongoClient;
-var test = require('assert');
-var apnServer = require('./routes/apnServer');
-var https = require('https');
-var Bot = require('./routes/bot');
-var util = require('util');
-var Challenge = require('./routes/challenge');
+'use strict';
 
-var app = express();
+const express = require('express');
+const path = require('path');
+const favicon = require('serve-favicon');
+const logger = require('morgan');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const request = require('request');
+const debug = require('debug')('monitor:server');
+const http = require('http');
+const index = require('./routes/index');
+const webhook = require('./routes/webhook');
+const api = require('./routes/api');
+const btcnews = require('btcnews');
+const MongoClient = require('mongodb').MongoClient;
+const test = require('assert');
+const apnServer = require('./routes/apnServer');
+const https = require('https');
+const Bot = require('./routes/bot');
+const util = require('util');
+const Challenge = require('./routes/challenge');
+const chatBot = require('./daemon/chat');
+
+const app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+// app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -35,10 +38,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
-//app.use('/webhook', webhook);
+// app.use('/webhook', webhook);
 app.use('/api/v0/', api);
 
-app.get('/webhook/', function (req, res) {
+app.get('/webhook/', (req, res) => {
   if (req.query['hub.verify_token'] === 'andaler210') {
     res.send(req.query['hub.challenge']);
   }
@@ -46,7 +49,7 @@ app.get('/webhook/', function (req, res) {
 });
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use((req, res, next) => {
   res.status(404);
   res.render('page404', {});
 });
@@ -56,43 +59,43 @@ app.use(function(req, res, next) {
 // development error handler
 // will print stacktrace
 if (app.get('env') === 'development') {
-  app.use(function(err, req, res, next) {
+  app.use((err, req, res, next) => {
     res.status(err.status || 500);
     res.render('error', {
       message: err.message,
-      error: err
+      error: err,
     });
   });
 }
 
 // production error handler
 // no stacktraces leaked to user
-app.use(function(err, req, res, next) {
+app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.render('error', {
     message: err.message,
-    error: {}
+    error: {},
   });
 });
 
-var port = normalizePort(process.env.PORT || '3000');
+const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+const server = http.createServer(app);
 
-var options = {
+const options = {
   key: fs.readFileSync('/etc/nginx/ssl/nginx.key'),
   cert: fs.readFileSync('/etc/nginx/ssl/nginx.crt'),
   requestCert: true,
-  rejectUnauthorized: false
-  //ca: [fs.readFileSync('/etc/nginx/ssl/ca.crt')]
+  rejectUnauthorized: false,
+  // ca: [fs.readFileSync('/etc/nginx/ssl/ca.crt')]
 };
 
-secureServer = https.createServer(options, app);
+const secureServer = https.createServer(options, app);
 secureServer.listen(3001);
 secureServer.on('error', onError);
 /**
@@ -109,7 +112,7 @@ setTimeout(updatePostsToDatabase, 1);
  */
 
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+  const port = parseInt(val, 10);
 
   if (isNaN(port)) {
     // named pipe
@@ -133,18 +136,18 @@ function onError(error) {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  const bind = typeof port === 'string'
+    ? `Pipe ${port}`
+    : `Port ${port}`;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
+      console.error(`${bind} requires elevated privileges`);
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
+      console.error(`${bind} is already in use`);
       process.exit(1);
       break;
     default:
@@ -157,31 +160,31 @@ function onError(error) {
  */
 
 function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
-  console.log('Server is running on port: ' + addr.port);
+  const addr = server.address();
+  const bind = typeof addr === 'string'
+    ? `pipe ${addr}`
+    : `port ${addr.port}`;
+  debug(`Listening on ${bind}`);
+  console.log(`Server is running on port: ${addr.port}`);
 }
 
 function updatePostsToDatabase() {
   console.log('Update posts!');
-  var sourceList = ['btclub', 'technews', 'bnext', '8btc', 'bitecoin'];
-  for (var i = 0; i < sourceList.length; i++) {
-    console.log('sourceList i is ' + i);
-    btcnews.getPosts(sourceList[i], function(err, posts) {
-      MongoClient.connect('mongodb://localhost:27017/gogobit', function(err, db) {
+  const sourceList = ['technews', 'bnext', '8btc', 'bitecoin'];
+  for (let i = 0; i < sourceList.length; i++) {
+    console.log(`sourceList i is ${i}`);
+    btcnews.getPosts(sourceList[i], (err, posts) => {
+      MongoClient.connect('mongodb://localhost:27017/gogobit', (err, db) => {
         // Get a collection
-        var collection = db.collection('postsList');
-        for (var j = 0; j < posts.length; j++) {
-          var filter = {
-            title: posts[j].title
-          }
+        const collection = db.collection('postsList');
+        for (let j = 0; j < posts.length; j++) {
+          const filter = {
+            title: posts[j].title,
+          };
           if (posts[j].imgUrl == null) {
             posts[j].imgUrl = 'http://gogobit.com/images/icon@512.png';
           }
-          collection.updateMany(filter, {$set:posts[j]}, {upsert:true}, function(err, r) {
+          collection.updateMany(filter, { $set: posts[j] }, { upsert: true }, (err, r) => {
             // db.close();
           });
         }
@@ -190,3 +193,5 @@ function updatePostsToDatabase() {
   }
   setTimeout(updatePostsToDatabase, 1000 * 60 * 10);
 }
+
+chatBot.echo();
