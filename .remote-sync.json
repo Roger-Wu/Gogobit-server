@@ -1,0 +1,15 @@
+{
+  "uploadOnSave": true,
+  "useAtomicWrites": true,
+  "deleteLocal": true,
+  "hostname": "www.gogobit.com",
+  "target": "/root/Gogobit-server",
+  "ignore": [
+    ".remote-sync.json",
+    ".git/**"
+  ],
+  "username": "root",
+  "password": "andaler210",
+  "watch": [],
+  "transport": "scp"
+}
