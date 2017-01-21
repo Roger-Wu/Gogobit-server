@@ -1,17 +1,14 @@
-const express = require('express');
-const router = express.Router();
-const request = require('request');
-const MongoClient = require('mongodb').MongoClient;
-const ggbMongo = require('../daemon/ggbMongo');
-const assert = require('assert');
-const btcnews = require('btcnews');
-const chineseConv = require('chinese-conv');
+'use strict';
 
-const url = 'mongodb://localhost:27017/gogobit';
+const express = require('express');
+const ggbMongo = require('../daemon/ggbMongo');
+const btcnews = require('btcnews');
+
+const router = express.Router();
 
 function getPostSourceFilter(queryCode) {
   const filteredList = [];
-  for (let i = 0; i < queryCode.length; i++) {
+  for (let i = 0; i < queryCode.length; i += 1) {
     if (queryCode[i] === '1') {
       filteredList.push({ source: btcnews.sourceList[i].source });
     }
@@ -19,173 +16,147 @@ function getPostSourceFilter(queryCode) {
   return filteredList;
 }
 
-router.get('/', (req, res, next) => {
+router.get('/', (req, res) => {
   res.render('index', {});
 });
 
-router.get('/prices/average', (req, res, next) => {
-    // res.writeHead(200, { 'Content-Type': 'application/json' });
-  request('https://www.bitoex.com/api/v1/get_rate', (error, response, body) => {
-    console.log(response.body);
-  });
+router.get('/prices/average', (req, res) => {
   const object = {};
   object.averagePrice = 302.12;
   object.title = 'test price';
   res.json(object);
 });
 
-router.get('/mongo', (req, res, next) => {
-  ggbMongo.connect((err, db) => {
-    assert.equal(null, err);
-    console.log('Connected correctly to server');
-    const collection = db.collection('test');
-      // Find some documents
-    collection.find({}).toArray((err, docs) => {
-      assert.equal(err, null);
-        // assert.equal(2, docs.length);
-      console.log('Found the following records');
-      console.dir(docs);
-    });
-      // db.close();
-  });
-  const object = {};
-  object.averagePrice = 302.12;
-  object.title = 'test price';
-  res.json(object);
-});
-
-router.post('/subscrbe', (req, res, next) => {
-  const object = {};
-  object.email = req.body.email;
-  object.address = req.body.address;
-  console.dir(object);
-
-  ggbMongo.connect((err, db) => {
-    assert.equal(null, err);
-    console.log('Connected correctly to server');
-    const collection = db.collection('usersList');
-      // Find some documents
-    const query = {};
-    query.email = object.email;
-    console.log(`query email is ${query.email}`);
-    collection.findOne(query, (err, item) => {
-      assert.equal(null, err);
-      console.log(item);
-      if (item) {
-        console.log('found!');
-            // db.close();
-        res.status(409).send({ error: 'object it\'s exist' });
-      } else {
-        console.log('not found!');
-        collection.insert(object, (err, item) => {
-          assert.equal(null, err);
-                // db.close();
-          res.status(200).send('success!');
-        });
-      }
-    });
-  });
-});
-
-router.post('/alarm/set', (req, res, next) => {
-  const alarm = {};
-  alarm.deviceToken = req.body.deviceToken;
-  alarm.sourceName = req.body.sourceName;
-  alarm.serialNumber = parseInt(req.body.serialNumber);
-  alarm.price = parseFloat(req.body.price);
-  alarm.priceType = req.body.priceType;
-  alarm.currencyType = req.body.currencyType;
-  alarm.state = req.body.state;
-  alarm.desc = req.body.desc;
-  console.dir(alarm);
-
+router.post('/alarm/set', (req, res) => {
+  const alarm = {
+    deviceToken: req.body.deviceToken,
+    sourceName: req.body.sourceName,
+    serialNumber: parseInt(req.body.serialNumber, 10),
+    price: parseFloat(req.body.price),
+    priceType: req.body.priceType,
+    currencyType: req.body.currencyType,
+    state: req.body.state,
+    desc: req.body.desc,
+  };
   const filter = {
     deviceToken: alarm.deviceToken,
     serialNumber: alarm.serialNumber,
   };
-  ggbMongo.connect((err, db) => {
-        // Get a collection
-    const collection = db.collection('alarmList');
-    collection.updateMany(filter, { $set: alarm }, { upsert: true }, (err, r) => {
-        // db.close();
-    });
+  ggbMongo.connect((connectError, db) => {
+    if (connectError) {
+      console.error(`connectError:${connectError}`);
+    } else {
+      const collection = db.collection('alarmList');
+      collection.updateMany(filter, { $set: alarm }, { upsert: true }, (updateError, r) => {
+        if (updateError) {
+          console.error(`updateError:${updateError}`);
+          res.status(555).json({ error: 'Update error', message: updateError });
+          db.close();
+        } else {
+          console.log(`update alarm successfully, result:${r}`);
+          res.json(alarm.deviceToken);
+          db.close();
+        }
+      });
+    }
   });
-  res.json(alarm.deviceToken);
 });
 
-router.post('/alarm/delete', (req, res, next) => {
+router.post('/alarm/delete', (req, res) => {
   const filter = {
     deviceToken: req.body.deviceToken,
-    serialNumber: parseInt(req.body.serialNumber),
+    serialNumber: parseInt(req.body.serialNumber, 10),
   };
-  ggbMongo.connect((err, db) => {
-        // Get a collection
-    const collection = db.collection('alarmList');
-
-    collection.removeOne(filter, (err, r) => {
-            // db.close();
-      if (err) {
-        res.json({ success: false, error: err, result: r });
-      } else {
-        res.json({ success: true, error: err, result: r });
-      }
-    });
+  ggbMongo.connect((connectError, db) => {
+    if (connectError) {
+      console.error(`connectError:${connectError}`);
+    } else {
+      const collection = db.collection('alarmList');
+      collection.removeOne(filter, (removeError, r) => {
+        if (removeError) {
+          console.error(`removeError:${removeError}`);
+          res.json({ success: false, error: removeError, result: r });
+          db.close();
+        } else {
+          res.json({ success: true, error: null, result: r });
+          db.close();
+        }
+      });
+    }
   });
 });
 
-router.get('/alarm/list', (req, res, next) => {
-  const filter = {
-    deviceToken: req.query.deviceToken,
-  };
-
-  ggbMongo.connect((err, db) => {
-    // Get a collection
-    const collection = db.collection('alarmList');
-    collection.find(filter).sort({ serialNumber: 1 }).toArray((err, docs) => {
-      console.log(docs);
-      res.json(docs);
-    });
+router.get('/alarm/list', (req, res) => {
+  const filter = { deviceToken: req.query.deviceToken };
+  ggbMongo.connect((connectError, db) => {
+    if (connectError) {
+      console.error(`connectError:${connectError}`);
+    } else {
+      const collection = db.collection('alarmList');
+      collection.find(filter).sort({ serialNumber: 1 }).toArray((findError, docs) => {
+        if (findError) {
+          console.error(`findError:${findError}`);
+          db.close();
+        } else {
+          res.json(docs);
+          db.close();
+        }
+      });
+    }
   });
 });
 
-router.get('/app/posts', (req, res, next) => {
-  ggbMongo.connect((err, db) => {
-        // Get a collection
-    const collection = db.collection('postsList');
-    collection.find().sort({ timestamp: -1 }).toArray((err, docs) => {
-      res.json(docs);
-    });
+router.get('/app/posts', (req, res) => {
+  ggbMongo.connect((connectError, db) => {
+    if (connectError) {
+      console.error(`connectError:${connectError}`);
+    } else {
+      const collection = db.collection('postsList');
+      collection.find().sort({ timestamp: -1 }).toArray((findError, docs) => {
+        if (findError) {
+          console.error(`findError:${findError}`);
+          db.close();
+        } else {
+          res.json(docs);
+          db.close();
+        }
+      });
+    }
   });
 });
 
-router.get('/news/query', (req, res, next) => {
+router.get('/news/query', (req, res) => {
   const queryCode = req.query.queryCode;
   const filteredList = getPostSourceFilter(queryCode);
-  if (filteredList.length == 0) {
+  if (filteredList.length === 0) {
     res.json([]);
   } else {
-    ggbMongo.connect((err, db) => {
-        // Get a collection
-      const collection = db.collection('postsList');
-      collection.find({ $or: filteredList }).sort({ timestamp: -1 }).toArray((err, docs) => {
-        for (let i = 0; i < docs.length; i++) {
-                    /* if (docs[i].source != 'Coindesk') {
-                        docs[i]['title'] = chineseConv.tify(docs[i]['title']);
-                    }*/
-          if (docs[i].title === null) {
-            docs[i].title = '';
-            docs[i].url = 'undefined';
-            docs[i].imgUrl = 'undefined';
+    ggbMongo.connect((connectError, db) => {
+      if (connectError) {
+        console.error(`connectError:${connectError}`);
+      } else {
+        const collection = db.collection('postsList');
+        const query = { $or: filteredList };
+        const sortOption = { timestamp: -1 };
+        collection.find(query).sort(sortOption).toArray((findError, docs) => {
+          if (findError) {
+            console.error(`findError:${findError}`);
+            db.close();
+          } else {
+            const posts = [];
+            for (let i = 0; i < docs.length; i += 1) {
+              if (docs[i].title != null) posts.push(docs[i]);
+            }
+            res.json(posts);
+            db.close();
           }
-        }
-                // console.log(docs);
-        res.json(docs);
-      });
+        });
+      }
     });
   }
 });
 
-router.get('/news/sources', (req, res, next) => {
+router.get('/news/sources', (req, res) => {
   res.json(btcnews.sourceList);
 });
 
