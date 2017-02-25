@@ -159,17 +159,23 @@ function updatePostsToDatabase() {
           if (connectError) console.error(`connectError:${connectError}`);
           else {
             const collection = db.collection('postsList');
-            for (let j = 0; j < posts.length; j += 1) {
-              const post = _.cloneDeep(posts[j]);
-              const filter = { title: post.title };
-              post.imgUrl = post.imgUrl || 'http://gogobit.com/images/icon@512.png';
-              if (post.imgUrl.indexOf('http') === -1) post.imgUrl = `http:${post.imgUrl}`;
-              if (post.url.indexOf('http') === -1) post.url = `http:${post.url}`;
-              collection.updateMany(filter, { $set: post }, { upsert: true }, (updateError, r) => {
-                if (updateError) console.error(`updateError:${updateError}`);
-                else console.log(`update successfully, result:${r}`);
-                db.close();
-              });
+            if (posts) {
+              for (let j = 0; j < posts.length; j += 1) {
+                const post = _.cloneDeep(posts[j]);
+                const filter = { title: post.title };
+                post.imgUrl = post.imgUrl || 'http://gogobit.com/images/icon@512.png';
+                if (post.imgUrl.indexOf('http') === -1) post.imgUrl = `http:${post.imgUrl}`;
+                if (post.url.indexOf('http') === -1) post.url = `http:${post.url}`;
+                collection.updateMany(
+                  filter,
+                  { $set: post },
+                  { upsert: true },
+                  (updateError, r) => {
+                    if (updateError) console.error(`updateError:${updateError}`);
+                    else console.log(`update successfully, result:${r}`);
+                    db.close();
+                  });
+              }
             }
           }
         });
