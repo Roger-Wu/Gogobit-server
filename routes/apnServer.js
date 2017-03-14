@@ -34,7 +34,7 @@ function getNote(alert, token) {
 }
 
 function checkAlarmTrigger(alarm, brokerPriceObject) {
-  if (alarm.state === 'off') {
+  if (alarm.deviceToken === 'simulator' || alarm.state === 'off') {
     return false;
   } else if (alarm.state === 'persistent') {
     console.log('in persistent!');

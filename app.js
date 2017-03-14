@@ -18,7 +18,7 @@ const https = require('https');
 // const Bot = require('./routes/bot');
 // const util = require('util');
 // const Challenge = require('./routes/challenge');
-const chatBot = require('./daemon/chat');
+// const chatBot = require('./daemon/chat');
 const _ = require('lodash');
 
 const app = express();
@@ -186,6 +186,6 @@ function updatePostsToDatabase() {
 }
 
 // Start daemon processes.
-chatBot.echo();
+// chatBot.echo();
 apnServer.checkBrokerPriceRepeatly();
 updatePostsToDatabase();
