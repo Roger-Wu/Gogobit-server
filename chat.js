@@ -3,9 +3,10 @@
 const login = require('facebook-chat-api');
 const bitcoinex = require('bitcoinex');
 const request = require('request');
-const ggbMongo = require('../daemon/ggbMongo');
+const ggbMongo = require('./daemon/ggbMongo');
 
 const THREAD_ID = '449917831858633'; // Bitcoin chat box thread id.
+const PASSWORD = process.env.FBLOGIN_PASSWORD;
 // Create simple echo bot
 
 const COMMAND_LIST = [
@@ -50,7 +51,7 @@ function checkPricePer5Minutes(api) {
 }
 
 const echo = () => {
-  login({ email: 'andaler210@gmail.com', password: '2915b6559a7f55096bb71702315e1dd5' }, (err, api) => {
+  login({ email: 'andaler210@gmail.com', password: PASSWORD }, (err, api) => {
     if (err) {
       setInterval(echo, 1000 * 10);
       return console.error(err);
